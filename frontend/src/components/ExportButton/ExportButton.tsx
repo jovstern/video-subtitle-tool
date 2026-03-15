@@ -5,8 +5,7 @@ import { downloadVtt } from '../../utils/vttExport'
 
 export function ExportButton() {
   const { cues, videoFile } = useSubtitleStore()
-
-  if (cues.length === 0) return null
+  const disabled = cues.length === 0
 
   const handleExport = () => {
     const name = videoFile ? videoFile.name.replace(/\.[^.]+$/, '.vtt') : 'subtitles.vtt'
@@ -14,7 +13,7 @@ export function ExportButton() {
   }
 
   return (
-    <Button onClick={handleExport} variant="solid" size="2">
+    <Button onClick={handleExport} variant="solid" size="2" disabled={disabled}>
       <Download size={15} />
       Export .vtt
     </Button>

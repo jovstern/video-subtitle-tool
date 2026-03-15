@@ -12,7 +12,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { Loader2 } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 import { ScrollArea, Text } from '@radix-ui/themes'
 import { useSubtitleStore } from '../../store/subtitleStore'
 import { CueRow } from './CueRow'
@@ -20,6 +20,7 @@ import { CueRow } from './CueRow'
 export function SubtitleEditor() {
   const { cues, reorderCues, transcriptionStatus } = useSubtitleStore()
   const isLoading = transcriptionStatus === 'uploading' || transcriptionStatus === 'processing'
+  const isError = transcriptionStatus === 'error'
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -34,16 +35,22 @@ export function SubtitleEditor() {
     if (fromIndex !== -1 && toIndex !== -1) reorderCues(fromIndex, toIndex)
   }
 
-  if (!isLoading && cues.length === 0) return null
+  if (!isLoading && !isError && cues.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-2 w-1/3 h-full ">
+    <div className={`flex flex-col gap-2 w-1/3 h-full ${isError ? 'opacity-50 pointer-events-none select-none' : ''}`}>
       <Text size="3" weight="bold">Subtitles</Text>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <ScrollArea className="flex-1 rounded-lg border border-gray-200 relative overflow-y-auto px-2">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-20">
               <Loader2 size={28} className="animate-spin text-indigo-500" />
+            </div>
+          )}
+          {isError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-20 gap-2">
+              <AlertCircle size={28} className="text-red-400" />
+              <Text size="2" color="red">Transcription failed</Text>
             </div>
           )}
           <table className="w-full text-sm border-collapse">

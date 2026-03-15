@@ -11,6 +11,7 @@ import { ExportButton } from './components/ExportButton/ExportButton'
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const { videoObjectURL, reset } = useSubtitleStore()
+  const noVideo = !videoObjectURL
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -18,12 +19,10 @@ function App() {
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-20">
         <Text size="5" weight="bold" className="text-indigo-600">Nagish</Text>
         <div className="flex items-center gap-2">
-          {videoObjectURL && (
-            <Button variant="soft" size="2" onClick={reset}>
-              <FolderOpen size={15} />
-              Load different video
-            </Button>
-          )}
+          <Button variant="soft" size="2" onClick={reset} disabled={noVideo}>
+            <FolderOpen size={15} />
+            Load different video
+          </Button>
           <ExportButton />
         </div>
       </header>
@@ -33,9 +32,9 @@ function App() {
         {!videoObjectURL ? (
           <DropZone />
         ) : (
-          <div className="w-3/4 flex flex-col gap-4">
+          <div className="w-3/4 flex flex-col  gap-4">
 
-            <div className="flex gap-6 max-h-[650px] ">
+            <div className="flex  gap-6 max-h-[650px] ">
               <VideoPlayer videoRef={videoRef} />
               <SubtitleEditor />
             </div>
