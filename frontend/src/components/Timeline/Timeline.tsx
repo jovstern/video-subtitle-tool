@@ -12,7 +12,6 @@ export function Timeline({ videoRef }: Props) {
   const { cues, videoDuration } = useSubtitleStore()
   const timelineRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
-
   useEffect(() => {
     const video = videoRef.current
 
@@ -48,7 +47,7 @@ export function Timeline({ videoRef }: Props) {
       </div>
 
       <div
-        className="absolute top-0 bottom-0 w-px bg-white pointer-events-none z-10"
+        className="absolute top-0 bottom-0 w-px bg-white pointer-events-none z-10 "
         style={{ left: playheadPct }}
       />
     </div>

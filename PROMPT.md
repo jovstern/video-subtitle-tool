@@ -1,147 +1,211 @@
-# Video Subtitling Tool — Project Prompt
-
-> **Demo note:** This demo works best with short videos (under ~2 minutes). Longer videos may fail or time out due to Gemini's free tier request size and rate limits.
-
-Build a production-leaning web app where a user can:
-
-- Drag a video file into the app
-- Preview and scrub the video
-- Trigger automatic caption generation from the audio track using Google Gemini
-- View and edit the generated subtitles: update text, timing, reorder, delete
-- See video keyframes on a timeline when scrubbing
-- Export the subtitle track as a `.vtt` file
+I am building a production-leaning video subtitling tool as a technical assessment. Act as my Senior Full-Stack Pairing
+Partner. The focus is heavily on the frontend — the backend should be minimal and simple, just enough to support
+transcription and keyframe extraction.
 
 ---
 
-## Stack
+## What I'm Building
 
-### Frontend
-- **React 19 + TypeScript** via Vite
-- **Tailwind CSS v4** (`@tailwindcss/vite`) for all layout and utility styling
-- **Radix UI Themes** (`@radix-ui/themes`) for components: Button, Badge, Text, ScrollArea, IconButton
-- **Zustand** for global state (video file, cues, keyframes, transcription status)
-- **@tanstack/react-query** for data fetching — use `useMutation` with native `fetch`, no axios
-- **react-dropzone** for drag & drop video upload
-- **@dnd-kit/core + @dnd-kit/sortable** for drag-to-reorder subtitle rows
-- **lucide-react** for all icons — no raw SVGs anywhere
+A web app where the user can:
 
-### Backend
-- **Node.js + Express + TypeScript** (`ts-node` for dev)
-- **multer** for multipart video file uploads
-- **Google Gemini API** (`@google/generative-ai`) — model `gemini-2.5-flash` — for audio transcription
-- **fluent-ffmpeg + @ffmpeg-installer/ffmpeg** for server-side keyframe extraction
-- **dotenv** for environment config
+- Drag and drop a video file
+- Preview and scrub it using the native HTML `<video>` element — no third-party player
+- Trigger automatic caption generation from the audio via Google Gemini
+- Edit the generated subtitles: text, timing, reorder, delete
+- See keyframes on a timeline, with a live playhead synced to the video
+- Export the subtitles as a `.vtt` file
 
 ---
 
-## Architecture
+## Frontend
 
-```
-nagish/
-├── frontend/          # Vite React app (port 5173)
-│   └── src/
-│       ├── store/subtitleStore.ts       # Zustand: video, cues, keyframes, status
-│       ├── hooks/
-│       │   ├── useTranscribe.ts         # useMutation: POST /api/transcribe + /api/keyframes
-│       │   └── useVideoSync.ts          # syncs video timeupdate → active cue highlight
-│       ├── components/
-│       │   ├── DropZone/                # drag & drop, triggers useTranscribe
-│       │   ├── VideoPlayer/             # <video> with subtitle overlay + status badge
-│       │   ├── Timeline/                # keyframe strip + draggable cue blocks
-│       │   ├── SubtitleEditor/          # sortable table, inline text/time editing
-│       │   └── ExportButton/            # generates + downloads .vtt file
-│       ├── utils/
-│       │   ├── vttExport.ts             # pure fn: Cue[] → WEBVTT string
-│       │   └── timeFormat.ts            # seconds ↔ HH:MM:SS.mmm
-│       └── types/subtitle.ts            # Cue, TranscriptionStatus
-│
-└── backend/           # Express API (port 8000)
-    └── src/
-        ├── index.ts                     # app entry, CORS, static files
-        ├── routes/
-        │   ├── transcription.ts         # POST /api/transcribe
-        │   └── keyframes.ts             # POST /api/keyframes
-        └── services/
-            ├── whisperService.ts        # Gemini API → Cue[]
-            └── keyframeService.ts       # ffmpeg → keyframe images → /static/...
-```
+This is the main focus. Keep components clean, typed, and easy to extend.
 
----
+**Framework & Build**
 
-## Backend API
+- React 19 + TypeScript, bundled with Vite
+- `verbatimModuleSyntax: true` in tsconfig — always `import type` for type-only imports
 
-```
-POST /api/transcribe
-  body: multipart/form-data { video: File }
-  response: { cues: { id, startTime, endTime, text }[] }
+**Styling**
 
-POST /api/keyframes
-  body: multipart/form-data { video: File }
-  response: { keyframes: string[] }   // /static/keyframes/{jobId}/frame_XXXX.jpg URLs
+- Tailwind CSS v4 via `@tailwindcss/vite` — all layout and utility classes
+- Radix UI Themes (`@radix-ui/themes`) for component-level UI: `Button`, `Badge`, `Text`, `ScrollArea`, `IconButton`
+- Prefer Radix Theme primitives (`Box`, `Flex`, `Button`, `Text`, etc.) over raw HTML elements (`div`, `button`, `p`)
 
-GET /static/**            // serves storage/ directory (keyframe images)
-```
+**State**
 
-Transcription uses `gemini-2.5-flash` with an inline base64 video payload. It prompts Gemini to return a JSON array of subtitle segments with `startTime`, `endTime`, and `text`.
+- Centralised store avoids props drilling as the app grows; video state and subtitle cues live together because they
+  must stay in sync (playhead, active cue, keyframes all derive from the same source of truth)
+- Zustand for all global client state: video file, object URL, duration, cues, keyframes, transcription status + error
+- TanStack Query (`@tanstack/react-query`) for server mutations — `useMutation` with native `fetch`, no axios
 
-Both requests are fired concurrently via `Promise.all` in `useTranscribe`.
+**Video**
+
+- Native HTML `<video>` element with a `ref` — no wrapper library
+- `timeupdate` event drives active cue highlight and timeline playhead position
+- `durationchange` event sets video duration in the store
+
+**Drag & Drop**
+
+- `react-dropzone` for video file drop
+- `@dnd-kit/core` + `@dnd-kit/sortable` for subtitle row reordering
+
+**Icons**
+
+- `lucide-react` only — no raw SVGs anywhere in the codebase
+
+**Key Hooks**
+
+- `useTranscribe` — custom hook wrapping `useMutation`, fires `/api/transcribe` and `/api/keyframes` concurrently,
+  writes results to Zustand store
+- `useVideoSync` — attaches `timeupdate` and `durationchange` listeners to the video ref, syncs active cue selection
 
 ---
 
-## State Shape (Zustand)
+## Backend
 
-```ts
-interface Cue { id: string; startTime: number; endTime: number; text: string }
+Keep it simple. Node.js + Express + TypeScript. Two endpoints and static file serving, nothing more.
+
+**Stack**
+
+- Express + TypeScript (`ts-node` for dev)
+- `multer` for multipart video uploads
+- `fluent-ffmpeg` + `@ffmpeg-installer/ffmpeg` for keyframe extraction
+- `@google/generative-ai` for transcription
+- `dotenv` for config
+
+**Endpoints**
+
+```
+POST /api/transcribe   — receives video, calls Gemini, returns cues[]
+POST /api/keyframes    — receives video, runs ffmpeg at 1fps, returns static URLs
+GET  /static/**        — serves backend/storage/ (keyframe images)
+```
+
+**Core backend operations:**
+
+- **Keyframe extraction** — splits the video into JPEG images using `fluent-ffmpeg` at 1fps; frames saved to
+  `backend/storage/keyframes/{jobId}/`
+- **Transcription** — sends the video to the Gemini AI agent (base64 inline), which returns a structured JSON array of
+  subtitle cues
+
+---
+
+## Gemini Transcription
+
+Model: `gemini-2.5-flash`
+
+The video is read as base64 and sent inline. The prompt instructs Gemini to return a strict JSON array only:
+
+```
+Transcribe the audio from this video into subtitle segments.
+Return ONLY a valid JSON array with no markdown or explanation.
+Each item: { "startTime": float, "endTime": float, "text": string }
+```
+
+Response is stripped of any markdown fences and parsed directly into `Cue[]`.
+
+> **Note:** Works best with short videos (<2 min) — Gemini free tier limits apply on payload size and rate.
+
+---
+
+## State Shape
+
+```typescript
+interface Cue {
+    id: string;
+    startTime: number;
+    endTime: number;
+    text: string
+}
+
 type TranscriptionStatus = 'idle' | 'uploading' | 'done' | 'error'
 
 interface SubtitleStore {
-  videoFile: File | null
-  videoObjectURL: string | null
-  videoDuration: number
-  keyframes: string[]
-  cues: Cue[]
-  selectedCueId: string | null
-  transcriptionStatus: TranscriptionStatus
-  // actions: setVideo, setCues, updateCue, deleteCue, reorderCues,
-  //          selectCue, setKeyframes, setTranscriptionStatus, reset
+    videoFile: File | null
+    videoObjectURL: string | null
+    videoDuration: number
+    keyframes: string[]          // /static/keyframes/{jobId}/frame_XXXX.jpg
+    cues: Cue[]
+    selectedCueId: string | null
+    transcriptionStatus: TranscriptionStatus
+    transcriptionError: string | null
 }
 ```
 
 ---
 
-## Layout & Design
+## Feature Specs
 
-- **Header**: sticky, white, `Nagish` logo in indigo. Right side: "Load different video" button (only when video loaded) + Export .vtt button (only when cues exist)
-- **Drop zone**: centered 700×500px, dashed border, indigo accent on hover/drag, Gemini icon
-- **Workspace** (after upload):
-  - Top-left: video player (fixed, with filename + file size badge above)
-  - Top-right: subtitle editor (1/3 width, scrollable table with spinner while loading)
-  - Bottom: timeline (full workspace width) — keyframe strip + cue bars
-- **Video player**: 700×500 black container, subtitle overlay above controls, status badge (spinner while uploading/processing, red on error)
-- **Timeline**: dark keyframe strip (1fps frames), colored indigo cue blocks positioned by time percentage, click to seek
-- **Subtitle editor**: Radix ScrollArea wrapping a table, sticky header, drag handle (GripVertical), inline number inputs for timing, textarea for text, red trash icon to delete. Selected row highlighted in indigo.
-- **Color palette**: indigo-500 accent, gray-50/200 borders and backgrounds, white surfaces
+### Video Player
+
+- Renders a native `<video>` element via a stable React `ref` passed down from the root
+- Shows a drag-and-drop zone (`react-dropzone`) when no file is loaded; replaced by the player once a file is set
+- Controls: play/pause toggle, current-time display, duration display — built with Radix `IconButton` / `Button`
+- Triggers transcription + keyframe extraction via `useTranscribe` after a file is dropped
+- The `ref` is the single source of truth for playback; do not mirror `currentTime` in the store — read it from the element directly
+
+### Subtitle Editor
+
+- Scrollable list of cue rows (`ScrollArea` from Radix), one row per `Cue` in the store
+- Each row shows: start time, end time, text — all inline-editable (controlled inputs)
+- Active cue (matching `selectedCueId`) is visually highlighted
+- Rows are drag-reorderable via `@dnd-kit/sortable`; store is updated on drop
+- Delete button per row (Radix `IconButton` + lucide `Trash2` icon)
+- Time inputs accept `HH:MM:SS.mmm` format; validate and clamp on blur
+
+### Timeline with Cues
+
+- Horizontal scrollable track scaled to `videoDuration`
+- Keyframe thumbnails rendered as evenly-spaced `<img>` tags along the bottom of the track
+- Each cue rendered as a positioned block whose `left` and `width` are derived from `startTime / videoDuration` and `(endTime - startTime) / videoDuration`
+- Clicking a cue block seeks the video and sets `selectedCueId` in the store
+- Live playhead: a vertical line whose `left` is updated on every `timeupdate` event (no store write — direct DOM style mutation for performance)
+- Clicking an empty area on the track seeks the video to that timestamp
 
 ---
 
-## Environment
+## Subtitle Caching
 
+Transcription is slow and costly — cache results keyed by file identity so the user never waits twice for the same video.
+
+**Key:**  `{filename}-{filesize}-{lastModified}` — cheap to compute, no hashing needed
+
+**Storage:** `localStorage` under `nagish:subtitles:{key}`
+
+**Shape stored:**
+```typescript
+interface CachedSubtitles {
+  key: string
+  cues: Cue[]
+  cachedAt: number   // Date.now()
+}
 ```
-# backend/.env
-GEMINI_API_KEY=your_key_here
-PORT=8000
-```
+
+**Rules:**
+- On file drop: compute key, check `localStorage` — if hit, load cues into store and skip the API call entirely
+- On transcription success: write result to `localStorage` before writing to the store
+- TTL: treat entries older than 7 days as stale and ignore them (check `cachedAt` on read)
+- Keep cache writes inside `useTranscribe` — no cache logic inside components
 
 ---
 
-## Running
+## Further Features
 
-```bash
-# Backend
-cd backend && npm run dev
+### Frontend
 
-# Frontend
-cd frontend && npm run dev
-```
+- [ ] Timeline cue resize — drag edges to adjust `startTime` / `endTime`
+- [ ] Add cue manually — double-click on timeline to insert at timestamp
+- [ ] Cue overlap validation — highlight conflicting rows in the editor
+- [ ] Keyboard shortcuts — space (play/pause), delete (remove cue), arrows (step)
+- [ ] Undo/redo — Zustand middleware (`zundo`)
+- [ ] Upload progress — XHR instead of fetch for real percentage
+- [ ] Waveform on timeline — Web Audio API
 
-Open http://localhost:5173
+### Backend / Scaling
+
+- [ ] Gemini File API — replace base64 inline for videos >20MB
+- [ ] Job queue — BullMQ + Redis, non-blocking transcription with SSE/WebSocket push
+- [ ] Storage cleanup — TTL or cron to purge temp files
+- [ ] Multiple providers — abstract transcription behind an interface (Whisper, AssemblyAI)
+- [ ] Docker — `Dockerfile` + `docker-compose.yaml` for both services

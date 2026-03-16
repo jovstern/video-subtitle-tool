@@ -9,6 +9,7 @@ interface SubtitleStore {
   cues: Cue[]
   selectedCueId: string | null
   transcriptionStatus: TranscriptionStatus
+  transcriptionError: string | null
   uploadProgress: number
 
   setVideo: (file: File) => void
@@ -19,7 +20,7 @@ interface SubtitleStore {
   deleteCue: (id: string) => void
   reorderCues: (fromIndex: number, toIndex: number) => void
   selectCue: (id: string | null) => void
-  setTranscriptionStatus: (status: TranscriptionStatus) => void
+  setTranscriptionStatus: (status: TranscriptionStatus, error?: string) => void
   setUploadProgress: (progress: number) => void
   reset: () => void
 }
@@ -32,6 +33,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
   cues: [],
   selectedCueId: null,
   transcriptionStatus: 'idle',
+  transcriptionError: null,
   uploadProgress: 0,
 
   setVideo: (file) => {
@@ -44,6 +46,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
       keyframes: [],
       selectedCueId: null,
       transcriptionStatus: 'idle',
+      transcriptionError: null,
       uploadProgress: 0,
     })
   },
@@ -72,7 +75,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
     }),
 
   selectCue: (id) => set({ selectedCueId: id }),
-  setTranscriptionStatus: (status) => set({ transcriptionStatus: status }),
+  setTranscriptionStatus: (status, error) => set({ transcriptionStatus: status, transcriptionError: error ?? null }),
   setUploadProgress: (progress) => set({ uploadProgress: progress }),
 
   reset: () =>
@@ -84,6 +87,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
       cues: [],
       selectedCueId: null,
       transcriptionStatus: 'idle',
+      transcriptionError: null,
       uploadProgress: 0,
     }),
 }))

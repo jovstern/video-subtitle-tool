@@ -47,7 +47,6 @@ export function VideoPlayer({ videoRef }: Props) {
       <div className="relative rounded-lg overflow-hidden">
         <video ref={videoRef} className="w-full h-full bg-black" controls playsInline />
 
-
         {activeCue && (
           <div className="absolute bottom-14 left-0 right-0 flex justify-center pointer-events-none">
             <span className="bg-black/75 text-white px-3 py-1 rounded text-base max-w-[80%] text-center leading-snug">
@@ -55,7 +54,6 @@ export function VideoPlayer({ videoRef }: Props) {
             </span>
           </div>
         )}
-
 
         {(transcriptionStatus === 'uploading' || transcriptionStatus === 'processing') && (
           <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
