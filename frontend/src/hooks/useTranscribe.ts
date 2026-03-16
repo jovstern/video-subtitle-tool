@@ -26,6 +26,6 @@ export function useTranscribe() {
       setKeyframes(keyframes)
       setTranscriptionStatus('done')
     },
-    onError: () => setTranscriptionStatus('error'),
+    onError: (err) => setTranscriptionStatus('error', err instanceof Error ? err.message : String(err)),
   })
 }
