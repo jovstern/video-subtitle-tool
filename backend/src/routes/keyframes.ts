@@ -20,7 +20,8 @@ router.post('/keyframes', upload.single('video'), async (req: Request, res: Resp
   }
 
   try {
-    const keyframes = await extractKeyframes(req.file.path, STORAGE)
+    const fps = req.body.fps ? Number(req.body.fps) : undefined
+    const keyframes = await extractKeyframes(req.file.path, STORAGE, fps)
     res.json({ keyframes })
   } catch (err) {
     console.error('Keyframe error:', err)
