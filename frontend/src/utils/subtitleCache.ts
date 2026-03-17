@@ -2,8 +2,14 @@ import type { Cue } from '../types/subtitle'
 
 const CACHE_KEY = 'nagish_subtitle_cache'
 const MAX_ENTRIES = 20
+const TTL_MS = 7 * 24 * 60 * 60 * 1000
 
-type CacheMap = Record<string, Cue[]>
+interface CacheEntry {
+  cues: Cue[]
+  cachedAt: number
+}
+
+type CacheMap = Record<string, CacheEntry>
 
 export function getFileFingerprint(file: File): string {
   return `${file.name}|${file.size}|${file.lastModified}`
@@ -21,7 +27,6 @@ function writeCache(map: CacheMap) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(map))
   } catch {
-    // localStorage full — clear and retry once
     localStorage.removeItem(CACHE_KEY)
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(map)) } catch { /* give up */ }
   }
@@ -29,17 +34,19 @@ function writeCache(map: CacheMap) {
 
 export function getCachedCues(file: File): Cue[] | null {
   const map = readCache()
-  return map[getFileFingerprint(file)] ?? null
+  const entry = map[getFileFingerprint(file)]
+  if (!entry) return null
+  if (Date.now() - entry.cachedAt > TTL_MS) return null
+  return entry.cues
 }
 
 export function setCachedCues(file: File, cues: Cue[]) {
   const map = readCache()
   const key = getFileFingerprint(file)
-  // Remove oldest entries if at cap (keep most recent MAX_ENTRIES - 1, add new one)
   const keys = Object.keys(map)
   if (keys.length >= MAX_ENTRIES && !map[key]) {
     delete map[keys[0]]
   }
-  map[key] = cues
+  map[key] = { cues, cachedAt: Date.now() }
   writeCache(map)
 }

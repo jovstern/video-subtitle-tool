@@ -7,6 +7,7 @@ export function SubtitleEditor() {
     const {cues, resetCues, originalCues, transcriptionStatus, transcriptionError, isFromCache} = useSubtitleStore()
     const isLoading = transcriptionStatus === 'uploading' || transcriptionStatus === 'processing'
     const isError = transcriptionStatus === 'error'
+    const isDirty = JSON.stringify(cues) !== JSON.stringify(originalCues)
 
     if (!isLoading && !isError && cues.length === 0) return null
 
@@ -17,13 +18,14 @@ export function SubtitleEditor() {
                 <div className="flex items-center gap-2">
                     <Text size="3" weight="bold">Subtitles</Text>
                     {isFromCache && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 text-xs font-medium">
+                        <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 text-xs font-medium">
                             <Zap size={10}/> Cached
                         </span>
                     )}
                 </div>
                 {originalCues.length > 0 && (
-                    <Button size="1" variant="ghost" color="gray" onClick={resetCues}>
+                    <Button size="1" variant="ghost" color="gray" onClick={resetCues} disabled={!isDirty}>
                         <RotateCcw size={12}/> Reset
                     </Button>
                 )}
@@ -47,7 +49,7 @@ export function SubtitleEditor() {
                         )}
                     </div>
                 )}
-                <table className="w-full text-sm border-collapse">
+                <table className="w-[99%] text-sm border-collapse">
                     <thead>
                     <tr className="bg-gray-50 sticky top-0 z-10">
                         <th className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Start</th>

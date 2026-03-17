@@ -1,7 +1,6 @@
 import { useRef } from 'react'
 import type { Cue } from '../../types/subtitle'
 import { useSubtitleStore } from '../../store/subtitleStore'
-import styles from './Timeline.module.css'
 
 interface Props {
   cue: Cue
@@ -49,7 +48,7 @@ export function CueBlock({ cue, duration, videoRef }: Props) {
 
   return (
     <div
-      className={`${styles.cueBlock} ${isSelected ? styles.selected : ''}`}
+      className={`absolute top-[3px] h-[22px] bg-indigo-500 rounded-[3px] opacity-70 cursor-grab transition-opacity duration-150 min-w-[4px] hover:opacity-100 ${isSelected ? 'opacity-100 outline outline-2 outline-white outline-offset-1 z-[2]' : ''}`}
       style={{ left, width }}
       onClick={onClick}
       onMouseDown={onMouseDown}

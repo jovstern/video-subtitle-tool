@@ -52,7 +52,7 @@ export function CueRow({cue}: Props) {
             </td>
             <td className="px-1 py-1.5">
               <textarea
-                  className="w-full min-w-[200px] px-1.5 py-1 text-sm border border-gray-200 rounded bg-white resize-y focus:outline-none focus:border-indigo-400 font-sans"
+                  className="w-full flex min-w-[200px] px-1.5 py-1 text-sm border border-gray-200 rounded bg-white resize-y focus:outline-none focus:border-indigo-400 font-sans"
                   value={cue.text}
                   rows={2}
                   onChange={(e) => updateCue(cue.id, {text: e.target.value})}

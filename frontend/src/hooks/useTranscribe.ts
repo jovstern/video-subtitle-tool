@@ -26,6 +26,13 @@ export function useTranscribe() {
       }
 
       setTranscriptionStatus('uploading')
+
+      const cached = getCachedCues(file)
+      if (cached) {
+        const keyframesRes = await postForm('/api/keyframes', file, { fps: String(KEYFRAME_INTERVAL_SECONDS) })
+        return { cues: cached, keyframes: keyframesRes.keyframes, fromCache: true }
+      }
+
       const [transcribeRes, keyframesRes] = await Promise.all([
         postForm('/api/transcribe', file),
         postForm('/api/keyframes', file, { fps: String(KEYFRAME_INTERVAL_SECONDS) }),
