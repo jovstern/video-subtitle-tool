@@ -2,7 +2,6 @@ import {useCallback, useEffect, useRef, useState} from 'react'
 import {useSubtitleStore} from '../../store/subtitleStore'
 import {KeyframeStrip} from './KeyframeStrip'
 import {CueBlock} from './CueBlock'
-import styles from './Timeline.module.css'
 
 interface Props {
     videoRef: React.RefObject<HTMLVideoElement | null>
@@ -41,7 +40,7 @@ export function Timeline({videoRef}: Props) {
         <div className="relative w-full rounded-lg overflow-hidden border border-gray-200 bg-white">
             <KeyframeStrip/>
 
-            <div className={styles.cueLayer} ref={timelineRef} onClick={onTimelineClick}>
+            <div className="relative h-7 bg-gray-50 cursor-crosshair border-t border-gray-200" ref={timelineRef} onClick={onTimelineClick}>
                 {cues.map((cue) => (
                     <CueBlock key={cue.id} cue={cue} duration={videoDuration} videoRef={videoRef}/>
                 ))}

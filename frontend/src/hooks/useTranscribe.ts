@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { useSubtitleStore } from '../store/subtitleStore'
 import { KEYFRAME_INTERVAL_SECONDS } from '../constants'
+import { getCachedCues, setCachedCues } from '../utils/subtitleCache'
 
 async function postForm(url: string, file: File, extra?: Record<string, string>) {
   const form = new FormData()
@@ -17,14 +18,22 @@ export function useTranscribe() {
   return useMutation({
     mutationFn: async (file: File) => {
       setTranscriptionStatus('uploading')
+
+      const cached = getCachedCues(file)
+      if (cached) {
+        const keyframesRes = await postForm('/api/keyframes', file, { fps: String(KEYFRAME_INTERVAL_SECONDS) })
+        return { cues: cached, keyframes: keyframesRes.keyframes, fromCache: true }
+      }
+
       const [transcribeRes, keyframesRes] = await Promise.all([
         postForm('/api/transcribe', file),
         postForm('/api/keyframes', file, { fps: String(KEYFRAME_INTERVAL_SECONDS) }),
       ])
-      return { cues: transcribeRes.cues, keyframes: keyframesRes.keyframes }
+      setCachedCues(file, transcribeRes.cues)
+      return { cues: transcribeRes.cues, keyframes: keyframesRes.keyframes, fromCache: false }
     },
-    onSuccess: ({ cues, keyframes }) => {
-      setCues(cues)
+    onSuccess: ({ cues, keyframes, fromCache }) => {
+      setCues(cues, fromCache)
       setKeyframes(keyframes)
       setTranscriptionStatus('done')
     },

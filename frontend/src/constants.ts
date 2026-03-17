@@ -1,0 +1,1 @@
+export const KEYFRAME_INTERVAL_SECONDS = 1

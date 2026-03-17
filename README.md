@@ -125,7 +125,51 @@ PORT=8000
 
 ---
 
-## Running Locally
+## Running with Docker (recommended)
+
+### Prerequisites
+- Docker & Docker Compose v2+
+- A [Google Gemini API key](https://aistudio.google.com/app/apikey)
+
+### 1. Configure environment
+
+```bash
+cp .env.example .env
+# Edit .env and set GEMINI_API_KEY=your_key_here
+```
+
+### 2. Build and start
+
+```bash
+docker compose up --build
+```
+
+Open **http://localhost**
+
+### How it works
+
+```
+Browser → nginx (port 80)
+            ├── / → serves React SPA (static files built into the image)
+            ├── /api/* → proxied to backend:8000
+            └── /static/* → proxied to backend:8000 (keyframe images)
+```
+
+- **Frontend** — multi-stage build: Node 22 compiles the Vite/React app, output served by nginx 1.27.
+- **Backend** — multi-stage build: Node 22 compiles TypeScript; production image runs `node dist/index.js`. FFmpeg is provided by the bundled `@ffmpeg-installer/ffmpeg` npm package (no system dependency).
+- **Storage** — keyframe images are written to a named Docker volume (`backend_storage`) so they survive container restarts.
+- **CORS** — configured via `CORS_ORIGIN` env var (defaults to `http://localhost:5173` for local dev, set to `http://localhost` in Docker).
+
+### Stopping
+
+```bash
+docker compose down          # stop containers, keep volume
+docker compose down -v       # stop and delete storage volume
+```
+
+---
+
+## Running Locally (dev)
 
 ```bash
 # Backend

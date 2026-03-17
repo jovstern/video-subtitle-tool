@@ -12,11 +12,12 @@ interface SubtitleStore {
   transcriptionStatus: TranscriptionStatus
   transcriptionError: string | null
   uploadProgress: number
+  isFromCache: boolean
 
   setVideo: (file: File) => void
   setVideoDuration: (duration: number) => void
   setKeyframes: (keyframes: string[]) => void
-  setCues: (cues: Cue[]) => void
+  setCues: (cues: Cue[], fromCache?: boolean) => void
   updateCue: (id: string, patch: Partial<Omit<Cue, 'id'>>) => void
   deleteCue: (id: string) => void
   reorderCues: (fromIndex: number, toIndex: number) => void
@@ -39,6 +40,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
   transcriptionStatus: 'idle',
   transcriptionError: null,
   uploadProgress: 0,
+  isFromCache: false,
 
   setVideo: (file) => {
     const prev = useSubtitleStore.getState().videoObjectURL
@@ -52,12 +54,13 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
       transcriptionStatus: 'idle',
       transcriptionError: null,
       uploadProgress: 0,
+      isFromCache: false,
     })
   },
 
   setVideoDuration: (duration) => set({ videoDuration: duration }),
   setKeyframes: (keyframes) => set({ keyframes }),
-  setCues: (cues) => set({ cues, originalCues: cues }),
+  setCues: (cues, fromCache = false) => set({ cues, originalCues: cues, isFromCache: fromCache }),
 
   updateCue: (id, patch) =>
     set((state) => ({
@@ -100,5 +103,6 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
       transcriptionStatus: 'idle',
       transcriptionError: null,
       uploadProgress: 0,
+      isFromCache: false,
     }),
 }))

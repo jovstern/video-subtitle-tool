@@ -13,6 +13,7 @@ export interface Cue {
 }
 
 const PROMPT = `Transcribe the audio from this video into subtitle segments.
+Detect the spoken language and transcribe in that same language — do not translate.
 Return ONLY a valid JSON array with no markdown or explanation. Each item must have:
 - "startTime": number (seconds, float)
 - "endTime": number (seconds, float)
