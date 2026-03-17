@@ -42,8 +42,7 @@ export function VideoPlayer({videoRef}: Props) {
                     </Badge>
                 </div>
             )}
-
-
+            
             <div className="relative rounded-lg overflow-hidden">
                 <video ref={videoRef} controls playsInline className="w-full h-full bg-black"/>
 
