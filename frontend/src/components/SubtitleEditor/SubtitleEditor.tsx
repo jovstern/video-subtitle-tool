@@ -1,10 +1,10 @@
-import {AlertCircle, Loader2, RotateCcw} from 'lucide-react'
+import {AlertCircle, Loader2, RotateCcw, Zap} from 'lucide-react'
 import {Button, ScrollArea, Text} from '@radix-ui/themes'
 import {useSubtitleStore} from '../../store/subtitleStore'
 import {CueRow} from './CueRow'
 
 export function SubtitleEditor() {
-    const {cues, resetCues, originalCues, transcriptionStatus, transcriptionError} = useSubtitleStore()
+    const {cues, resetCues, originalCues, transcriptionStatus, transcriptionError, isFromCache} = useSubtitleStore()
     const isLoading = transcriptionStatus === 'uploading' || transcriptionStatus === 'processing'
     const isError = transcriptionStatus === 'error'
 
@@ -14,7 +14,14 @@ export function SubtitleEditor() {
         <div
             className={`flex flex-col gap-2 w-1/3 h-auto ${isError ? 'opacity-50 pointer-events-none select-none' : ''}`}>
             <div className="flex items-center justify-between">
-                <Text size="3" weight="bold">Subtitles</Text>
+                <div className="flex items-center gap-2">
+                    <Text size="3" weight="bold">Subtitles</Text>
+                    {isFromCache && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 text-xs font-medium">
+                            <Zap size={10}/> Cached
+                        </span>
+                    )}
+                </div>
                 {originalCues.length > 0 && (
                     <Button size="1" variant="ghost" color="gray" onClick={resetCues}>
                         <RotateCcw size={12}/> Reset
