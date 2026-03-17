@@ -1,6 +1,5 @@
-import {useSortable} from '@dnd-kit/sortable'
-import {CSS} from '@dnd-kit/utilities'
-import {GripVertical, Trash2} from 'lucide-react'
+import {useEffect, useRef} from 'react'
+import {Trash2} from 'lucide-react'
 import {IconButton} from '@radix-ui/themes'
 import type {Cue} from '../../types/subtitle'
 import {useSubtitleStore} from '../../store/subtitleStore'
@@ -12,16 +11,11 @@ interface Props {
 export function CueRow({cue}: Props) {
     const {updateCue, deleteCue, selectCue, selectedCueId} = useSubtitleStore()
     const isSelected = selectedCueId === cue.id
+    const rowRef = useRef<HTMLTableRowElement>(null)
 
-    const {attributes, listeners, setNodeRef, transform, transition, isDragging} = useSortable({
-        id: cue.id,
-    })
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.4 : 1,
-    }
+    useEffect(() => {
+        if (isSelected) rowRef.current?.scrollIntoView({block: 'nearest', behavior: 'smooth'})
+    }, [isSelected])
 
     const handleTimeChange = (field: 'startTime' | 'endTime', value: string) => {
         const num = parseFloat(value)
@@ -30,14 +24,10 @@ export function CueRow({cue}: Props) {
 
     return (
         <tr
-            ref={setNodeRef}
-            style={style}
+            ref={rowRef}
             onClick={() => selectCue(cue.id)}
             className={`border-b border-gray-200 cursor-pointer transition-colors ${isSelected ? 'bg-indigo-100' : 'hover:bg-gray-50'}`}
         >
-            <td className="px-1 py-1.5 text-gray-300 hover:text-gray-500 cursor-grab" {...attributes} {...listeners}>
-                <GripVertical size={14}/>
-            </td>
             <td className="px-1 py-1.5">
                 <input
                     type="number"

@@ -7,6 +7,7 @@ interface SubtitleStore {
   videoDuration: number
   keyframes: string[]
   cues: Cue[]
+  originalCues: Cue[]
   selectedCueId: string | null
   transcriptionStatus: TranscriptionStatus
   transcriptionError: string | null
@@ -19,6 +20,8 @@ interface SubtitleStore {
   updateCue: (id: string, patch: Partial<Omit<Cue, 'id'>>) => void
   deleteCue: (id: string) => void
   reorderCues: (fromIndex: number, toIndex: number) => void
+  sortCuesByTime: () => void
+  resetCues: () => void
   selectCue: (id: string | null) => void
   setTranscriptionStatus: (status: TranscriptionStatus, error?: string) => void
   setUploadProgress: (progress: number) => void
@@ -31,6 +34,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
   videoDuration: 0,
   keyframes: [],
   cues: [],
+  originalCues: [],
   selectedCueId: null,
   transcriptionStatus: 'idle',
   transcriptionError: null,
@@ -53,7 +57,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
 
   setVideoDuration: (duration) => set({ videoDuration: duration }),
   setKeyframes: (keyframes) => set({ keyframes }),
-  setCues: (cues) => set({ cues }),
+  setCues: (cues) => set({ cues, originalCues: cues }),
 
   updateCue: (id, patch) =>
     set((state) => ({
@@ -74,6 +78,12 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
       return { cues }
     }),
 
+  sortCuesByTime: () =>
+    set((state) => ({ cues: [...state.cues].sort((a, b) => a.startTime - b.startTime) })),
+
+  resetCues: () =>
+    set((state) => ({ cues: state.originalCues, selectedCueId: null })),
+
   selectCue: (id) => set({ selectedCueId: id }),
   setTranscriptionStatus: (status, error) => set({ transcriptionStatus: status, transcriptionError: error ?? null }),
   setUploadProgress: (progress) => set({ uploadProgress: progress }),
@@ -85,6 +95,7 @@ export const useSubtitleStore = create<SubtitleStore>((set) => ({
       videoDuration: 0,
       keyframes: [],
       cues: [],
+      originalCues: [],
       selectedCueId: null,
       transcriptionStatus: 'idle',
       transcriptionError: null,

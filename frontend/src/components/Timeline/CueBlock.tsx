@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function CueBlock({ cue, duration, videoRef }: Props) {
-  const { selectedCueId, selectCue, updateCue } = useSubtitleStore()
+  const { selectedCueId, selectCue, updateCue, sortCuesByTime } = useSubtitleStore()
   const isSelected = selectedCueId === cue.id
   const dragStart = useRef<{ x: number; startTime: number; endTime: number } | null>(null)
 
@@ -40,6 +40,7 @@ export function CueBlock({ cue, duration, videoRef }: Props) {
       dragStart.current = null
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
+      sortCuesByTime()
     }
 
     window.addEventListener('mousemove', onMouseMove)

@@ -14,12 +14,12 @@ function App() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header/>
 
-            <main className="flex-1 flex justify-center mt-8">
+            <main className="flex-1 flex justify-center items-center">
                 {!videoObjectURL && <DropZone/>}
-                
+
                 {videoObjectURL && (
                     <div className="w-3/4 flex flex-col gap-4">
-                        <div className="flex gap-6 max-h-[650px]">
+                        <div className="flex gap-6 max-h-[650px] h-auto">
                             <VideoPlayer videoRef={videoRef}/>
                             <SubtitleEditor/>
                         </div>
