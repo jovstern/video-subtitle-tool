@@ -17,6 +17,14 @@ export function useTranscribe() {
 
   return useMutation({
     mutationFn: async (file: File) => {
+      const cached = getCachedCues(file)
+      if (cached) {
+        setTranscriptionStatus('uploading')
+        // Still need keyframes — upload only for that
+        const keyframesRes = await postForm('/api/keyframes', file, { fps: String(KEYFRAME_INTERVAL_SECONDS) })
+        return { cues: cached, keyframes: keyframesRes.keyframes, fromCache: true }
+      }
+
       setTranscriptionStatus('uploading')
 
       const cached = getCachedCues(file)
